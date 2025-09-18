@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { calculateTimeValues } from "./calculateTimeValues";
 import "./styles.css";
 
 const TITLE_URL_PARAM = "title";
@@ -25,45 +26,6 @@ function getDateFromUrl() {
   return date;
 }
 
-function calculateTimeValues(startDate, endDate) {
-  if (startDate > endDate) {
-    [startDate, endDate] = [endDate, startDate];
-  }
-
-  let temp = new Date(startDate);
-
-  function addUnit(unit, value) {
-    let test = new Date(temp);
-    if (unit === "year") test.setFullYear(test.getFullYear() + value);
-    if (unit === "month") test.setMonth(test.getMonth() + value);
-    if (unit === "day") test.setDate(test.getDate() + value);
-    if (unit === "hour") test.setHours(test.getHours() + value);
-    if (unit === "minute") test.setMinutes(test.getMinutes() + value);
-    if (unit === "second") test.setSeconds(test.getSeconds() + value);
-    return test <= endDate ? test : null;
-  }
-
-  function countUnit(unit) {
-    let value = 0;
-    while (addUnit(unit, value + 1)) {
-      ++value;
-    }
-    temp = addUnit(unit, value) ?? temp;
-    return value;
-  }
-
-  const year = countUnit("year");
-  const month = countUnit("month");
-  let day = countUnit("day");
-  const week = Math.floor(day / 7);
-  day %= 7;
-  const hour = countUnit("hour");
-  const minute = countUnit("minute");
-  const second = countUnit("second");
-
-  return { year, month, week, day, hour, minute, second };
-}
-
 function filterLeadingZeroes(timeValues) {
   const entries = Object.entries(timeValues);
   const index = entries.findIndex(([, value]) => value !== 0);
@@ -88,6 +50,7 @@ function App() {
 
   const timeDifference = Math.abs(now - date);
   const timeValues = calculateTimeValues(date, now);
+  delete timeValues.millisecond;
 
   const displayTimeValues = filterLeadingZeroes(timeValues).map(
     ([unit, value]) => ({
